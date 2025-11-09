@@ -25,8 +25,7 @@ export default defineConfig({
   use: {
     actionTimeout: 0,
     browserName: 'chromium',
-    channel: 'chrome',
-    headless: false,
+    headless: true,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'off',
     baseURL: 'https://plus91hq.plus91online.com/drive_file_version_control/zealver_ms/public/login.php',
@@ -49,7 +48,10 @@ export default defineConfig({
    projects: [
      {
        name: 'chromium',
-       use: { ...devices['Desktop Chrome'] },
+       use: {
+         ...devices['Desktop Chrome'],
+         channel: undefined,
+       },
      },
      
     // {

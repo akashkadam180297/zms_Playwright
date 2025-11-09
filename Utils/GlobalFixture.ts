@@ -13,7 +13,7 @@ type MyFixtures = {
 const test = base.extend<MyFixtures>({
     sharedContext: async ({ }, use) => {
         // Create the browser and load saved state
-        const browser = await chromium.launch();
+        const browser = await chromium.launch({ headless: true });
         context = await browser.newContext({
             storageState: 'storageState.json', // Load stored session state
             recordVideo: {
@@ -21,14 +21,22 @@ const test = base.extend<MyFixtures>({
                 size: { width: 1920, height: 1080 }, // Video resolution
             }
         });
-        await use(context);
-        //await context.close();
+
+        try {
+            await use(context);
+        } finally {
+            await context.close();
+            await browser.close();
+        }
     },
 
     sharedPage: async ({ sharedContext }, use) => {
         page = await sharedContext.newPage();
-        await use(page);
-        //await page.close();
+        try {
+            await use(page);
+        } finally {
+            await page.close();
+        }
     },
 });
 

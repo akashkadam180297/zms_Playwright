@@ -17,7 +17,7 @@ async function globalSetup(config: FullConfig) {
   process.env.BASE_URL = config.projects[0].use?.baseURL || "";
 
   // Launch browser and create context
-  browser = await chromium.launch();
+  browser = await chromium.launch({ headless: true });
   context = await browser.newContext();
 
   // Save cookies and session state
