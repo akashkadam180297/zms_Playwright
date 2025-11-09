@@ -15,7 +15,21 @@ function getTimestamp() {
 const timestampFolder = getTimestamp();
 // Function to generate Allure report
 const generateAllureReport = () => {
-  testClassName = fs.readFileSync('./TestData/TXTFile/data.txt', 'utf-8');
+  if (!fs.existsSync('./allure-results')) {
+    console.warn('Allure results directory not found. Skipping report generation.');
+    return;
+  }
+
+  if (!fs.existsSync('./TestData/TXTFile/data.txt')) {
+    console.warn('Test metadata file not found. Skipping Allure report generation.');
+    return;
+  }
+
+  testClassName = fs.readFileSync('./TestData/TXTFile/data.txt', 'utf-8').trim();
+  if (!testClassName) {
+    console.warn('Test metadata file was empty. Skipping Allure report generation.');
+    return;
+  }
   try {
     console.log("All tests completed. Generating Allure report...");
     execSync(
@@ -29,14 +43,16 @@ const generateAllureReport = () => {
         "./allure-report" + "/"+testClassName+"/"+testClassName +"-"+timestampFolder
       } directory.`
     );
-    execSync(
-      `allure open ${
-        "./allure-report" + "/"+testClassName+"/"+testClassName +"-"+timestampFolder
-      }`,
-      { stdio: "inherit" }
-    );
+    if (process.env.OPEN_ALLURE_REPORT === "true") {
+      execSync(
+        `allure open ${
+          "./allure-report" + "/"+testClassName+"/"+testClassName +"-"+timestampFolder
+        }`,
+        { stdio: "inherit" }
+      );
+    }
   } catch (error) {
-    console.log("Error is : " + error.message);
+    console.log("Error is : " + (error as Error).message);
   }
 };
 

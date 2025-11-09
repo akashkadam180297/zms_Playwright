@@ -6,7 +6,8 @@
   "scripts": {
     "pretest": "rimraf allure-results",
     "preenv:ENV_UAT": "rimraf allure-results",
-    "env:ENV_UAT": "cross-env test_env=ENV_UAT npx playwright test",
+    "env:ENV_UAT": "cross-env test_env=ENV_UAT node node_modules/playwright/cli.js test",
+    "test": "cross-env test_env=ENV_UAT node node_modules/playwright/cli.js test",
     "pretest:EC-EU": "rimraf allure-results"
   },
   "keywords": [],
