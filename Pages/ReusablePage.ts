@@ -1,4 +1,4 @@
-import { Page, Locator, expect, test } from "@playwright/test";
+import { Page } from "@playwright/test";
 import WaitActionClass from "../Actions/WaitActions";
 import WebElementActionClass from "../Actions/WebElementActions";
 import LocatorsPage from "../Pages/Locators";
@@ -22,12 +22,15 @@ export default class ReusablePage {
 
   async navigateToUrl(url: string) {
     const baseURL = process.env.BASE_URL;
-    if (!baseURL) {
-      throw new Error("BASE_URL is not defined.");
+    const isAbsoluteUrl = /^https?:\/\//i.test(url);
+
+    if (!isAbsoluteUrl && !baseURL) {
+      throw new Error("BASE_URL is not defined and a relative URL was provided.");
     }
-    const fullUrl = new URL(url, baseURL).href;
-    await this.page.goto(fullUrl);
-    console.log("Navigated to the " + fullUrl);
+
+    const targetUrl = isAbsoluteUrl ? url : new URL(url, baseURL).href;
+    await this.page.goto(targetUrl, { waitUntil: "load" });
+    console.log(`Navigated to ${targetUrl}`);
   }
 
   /**

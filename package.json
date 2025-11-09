@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "pretest": "rimraf allure-results",
-    "preenv:ENV_UAT": "rimraf allure-results",
-    "env:ENV_UAT": "cross-env test_env=ENV_UAT npx playwright test",
-    "pretest:EC-EU": "rimraf allure-results"
+    "pretest": "node Utils/clean-artifacts.js",
+    "test": "node Utils/run-tests.js",
+    "test:list": "npm run test -- --list",
+    "preenv:ENV_UAT": "node Utils/clean-artifacts.js",
+    "env:ENV_UAT": "node Utils/run-tests.js --env ENV_UAT",
+    "pretest:EC-EU": "node Utils/clean-artifacts.js"
   },
   "keywords": [],
   "author": "",
