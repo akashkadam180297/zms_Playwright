@@ -1,120 +1,113 @@
-import { Page, Locator, expect, Download } from "@playwright/test";
-import { test } from "../Utils/GlobalFixture";
-import * as path from "path";
 import * as fs from "fs";
-import LocatorsPage from "../Pages/Locators";
-import WebElementPage from "./WebElementActions";
-import WaitActionPage from "./WaitActions";
+import * as path from "path";
+import { Page } from "@playwright/test";
 
+import { test } from "../Utils/GlobalFixture";
 
-
-let runningTestClassName: string, result: string;
+type ErrnoException = NodeJS.ErrnoException;
 
 export default class ReusableActions {
-  private locatorsPage: LocatorsPage;
-  private webElementPage: WebElementPage;
-  private waitActionPage: WaitActionPage;
-  constructor(public page: Page) {
-    this.locatorsPage = new LocatorsPage(page);
-    this.webElementPage = new WebElementPage(page);
-    this.waitActionPage = new WaitActionPage(page);
-  }
+  private runningTestClassName?: string;
+
+  constructor(public readonly page: Page) {}
 
   /**
-   * Ge the class name of the running class
+   * Return the name of the running spec without the .spec.ts suffix.
    */
-  async getTheClassName() {
-    // Get the current test file path using test.info()
+  async getTheClassName(): Promise<string> {
     try {
       const testInfo = test.info();
-      // Extract the file name from the full path
       const fileName = path.basename(testInfo.file);
-      // Store the class/file name in a variable
-      runningTestClassName = fileName;
-      result = runningTestClassName.replace(".spec.ts", "");
-      // You can now use this variable in your test
+      this.runningTestClassName = fileName.replace(/\.spec\.ts$/i, "");
+      return this.runningTestClassName;
     } catch (error) {
-      console.log("Error file getting class name :", error.message);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("Error retrieving class name:", message);
+      throw new Error(`Unable to determine the running test name: ${message}`);
     }
-    return result;
   }
 
   /**
-   * Write the data into the text file
+   * Write the provided data into a text file, creating directories if required.
    */
-
-  async writeDataIntoTextFile(data: string, path: string) {
-    fs.writeFileSync(path, data, "utf-8");
+  async writeDataIntoTextFile(data: string, filePath: string): Promise<void> {
+    const resolvedPath = path.resolve(filePath);
+    await fs.promises.mkdir(path.dirname(resolvedPath), { recursive: true });
+    await fs.promises.writeFile(resolvedPath, data, "utf-8");
   }
 
   /**
-   * REad the data from the text file
+   * Read the contents of a text file.
    */
-
-  async readDataFromTextFile(path: string) {
-    return fs.readFileSync(path, "utf-8");
+  async readDataFromTextFile(filePath: string): Promise<string> {
+    const resolvedPath = path.resolve(filePath);
+    return fs.promises.readFile(resolvedPath, "utf-8");
   }
 
   /**
-   * Delete the pdf in created directory
+   * Delete all files within the provided directory.
    */
+  async deleteFiles(dirPath: string): Promise<void> {
+    const resolvedPath = path.resolve(dirPath);
 
-  async deleteFiles(dirPath: string) {
-    fs.readdir(dirPath, (err, files) => {
-      if (err) {
-        console.error(`failed to read directory: ${err}`);
+    try {
+      const files = await fs.promises.readdir(resolvedPath);
+      await Promise.all(
+        files.map(async (file) => {
+          const filePath = path.join(resolvedPath, file);
+          await fs.promises.unlink(filePath);
+        })
+      );
+    } catch (error) {
+      const errnoError = error as ErrnoException;
+      if (errnoError?.code === "ENOENT") {
+        console.warn(`Directory not found when attempting to delete files: ${resolvedPath}`);
         return;
       }
 
-      files.forEach((file) => {
-        const filePath = path.join(dirPath, file);
-        fs.unlink(filePath, (err) => {
-          if (err) {
-            console.error(`failed to delete file $(filepath): ${err}`);
-          } else {
-            console.log(`Deleted file: ${filePath}`);
-          }
-        });
-      });
-    });
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to delete files in ${resolvedPath}: ${message}`);
+    }
   }
+
   /**
-  * Get timestamp
-  */
-  async getTimestamp() {
+   * Get a timestamp string suitable for file or folder names.
+   */
+  getTimestamp(): string {
     const now = new Date();
     const datePart = now.toISOString().replace(/T/, "-").replace(/:/g, "-").split(".")[0];
-    const milliseconds = now.getMilliseconds().toString().padStart(3, "0"); // Ensure milliseconds are 3 digits
+    const milliseconds = now.getMilliseconds().toString().padStart(3, "0");
     return `${datePart}-${milliseconds}`;
   }
+
   /**
-  * Generate random number
-  */
-  async generateRandomNumber(length: number) {
-    const min = Math.pow(10, length - 1); // Minimum value with the specified length
-    const max = Math.pow(10, length) - 1; // Maximum value with the specified length
+   * Generate a random number with the provided length.
+   */
+  generateRandomNumber(length: number): number {
+    if (length <= 0) {
+      throw new Error("Length must be a positive integer");
+    }
+
+    const min = Math.pow(10, length - 1);
+    const max = Math.pow(10, length) - 1;
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-  /**
-  * Get past date
-  */
-  async getPastDate(daysToSubtract: number) {
-    let dateAndTime;
-    let currentDate = new Date();
 
-    // Subtract the specified number of days
+  /**
+   * Get a past date formatted as dd/MM/yyyy.
+   */
+  getPastDate(daysToSubtract: number): string {
+    if (!Number.isInteger(daysToSubtract)) {
+      throw new Error("daysToSubtract must be an integer");
+    }
+
+    const currentDate = new Date();
     currentDate.setDate(currentDate.getDate() - daysToSubtract);
 
-    // Format the date to dd/MM/yyyy
-    let day = String(currentDate.getDate()).padStart(2, '0');
-    let month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    let year = currentDate.getFullYear();
+    const day = String(currentDate.getDate()).padStart(2, "0");
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const year = currentDate.getFullYear();
 
-    dateAndTime = `${day}/${month}/${year}`;
-
-  
-
-
-
-}
+    return `${day}/${month}/${year}`;
+  }
 }

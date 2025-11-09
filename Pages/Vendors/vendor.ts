@@ -1,73 +1,51 @@
-import { Page, expect } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
+
 import WaitActionClass from "../../Actions/WaitActions";
 import WebElementActionClass from "../../Actions/WebElementActions";
 import LocatorsPage from "../Locators";
-import ReusableActionClass from "../../Actions/ReusableActions";
-
-
-let timeStamp;
 
 export default class VendorPage {
-    [x: string]: any;
- private waitActionClass: WaitActionClass;
-  private webElementActionClass: WebElementActionClass;
-  private reusableActionClass: ReusableActionClass;
-  private locatorsPage: LocatorsPage;
+  private readonly waitActionClass: WaitActionClass;
+  private readonly webElementActionClass: WebElementActionClass;
+  private readonly locatorsPage: LocatorsPage;
 
-    constructor(public page: Page) {
-      // Initialize class objects
-      this.waitActionClass = new WaitActionClass(page);
-      this.webElementActionClass = new WebElementActionClass(page);
-      this.reusableActionClass = new ReusableActionClass(page);
-      this.locatorsPage = new LocatorsPage(page);
-    }
-
-  /**click on vendor */
-  async clickOnVendorMenu (){
-  await this.waitActionClass.loadingWaitForDisplayNone(this.locatorsPage.tab_Vendor)
-  await this.webElementActionClass.Force_Click(this.locatorsPage.tab_Vendor);
-  console.log("click on Vendor menu");
-
-
+  constructor(public readonly page: Page) {
+    this.waitActionClass = new WaitActionClass(page);
+    this.webElementActionClass = new WebElementActionClass(page);
+    this.locatorsPage = new LocatorsPage(page);
   }
 
-   /**
-   * Verify customer tab fields
-   */
-   async verifyCustomerTabFields() {
+  /** Click on the vendor menu. */
+  async clickOnVendorMenu(): Promise<void> {
+    await this.waitActionClass.loadingWaitForDisplayNone(this.locatorsPage.tab_Vendor);
+    await this.webElementActionClass.Force_Click(this.locatorsPage.tab_Vendor);
+    console.log("Clicked on Vendor menu");
+  }
+
+  /** Verify that the vendor tab fields are visible. */
+  async verifyCustomerTabFields(): Promise<void> {
     await this.waitActionClass.waitForElementVisible(this.locatorsPage.label_Vendor);
     await expect(this.locatorsPage.label_Vendor).toBeVisible();
+  }
 
-   }
- 
-   /**click on quick Create Vendor */
-
-   async clickOnQuickCreateVendor () {
+  /** Click on the quick create vendor button. */
+  async clickOnQuickCreateVendor(): Promise<void> {
     await this.waitActionClass.loadingWaitForDisplayNone(this.locatorsPage.btn_Quick_Create_Vendor);
     await this.webElementActionClass.Force_Click(this.locatorsPage.btn_Quick_Create_Vendor);
-    console.log("click On Quick Create Vendor ");
+    console.log("Clicked on Quick Create Vendor");
+  }
 
-
-   }
-   /**select vendor type */
-
-   async selectVendorType () {
+  /** Select the vendor type. */
+  async selectVendorType(): Promise<void> {
     await this.page.waitForTimeout(5000);
-    await this.locatorsPage.label_Vendor_Type.selectOption({ label: 'Individual' });
-    console.log("Select vendor type Individual");
+    await this.locatorsPage.label_Vendor_Type.selectOption({ label: "Individual" });
+    console.log("Selected vendor type Individual");
+  }
 
-
-   }
-   /**enter the vendor name */
-   async enterTheVendorName(): Promise<void>  {
-   const vendorName = "Akash";
-   await this.webElementActionClass.Send_Keys(this.locatorsPage.label_FirstName,vendorName)
-   console.log("enter the name sucessfully");
-
-   }
-
-
+  /** Enter the vendor name. */
+  async enterTheVendorName(): Promise<void> {
+    const vendorName = "Akash";
+    await this.webElementActionClass.Send_Keys(this.locatorsPage.label_FirstName, vendorName);
+    console.log("Entered the vendor name successfully");
+  }
 }
-
-
-
